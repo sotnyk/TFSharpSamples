@@ -100,18 +100,16 @@ namespace InceptionSample
                     // it
                     bool jagged = true;
 
-                    var bestIdx = 0;
-                    float p = 0, best = 0;
+                    var bestProbs = new List<(int, float)>();
 
                     if (jagged)
                     {
                         var probabilities = ((float[][])result.GetValue(jagged: true))[0];
                         for (int i = 0; i < probabilities.Length; i++)
                         {
-                            if (probabilities[i] > best)
+                            if (probabilities[i] > 0.01f)
                             {
-                                bestIdx = i;
-                                best = probabilities[i];
+                                bestProbs.Add((i, probabilities[i]));
                             }
                         }
 
@@ -123,15 +121,18 @@ namespace InceptionSample
                         // Result is [1,N], flatten array
                         for (int i = 0; i < val.GetLength(1); i++)
                         {
-                            if (val[0, i] > best)
+                            if (val[0, i] > 0.01f)
                             {
-                                bestIdx = i;
-                                best = val[0, i];
+                                bestProbs.Add((i, val[0, i]));
                             }
                         }
                     }
 
-                    Console.WriteLine($"{file} best match: [{bestIdx}] {best * 100.0}% {labels[bestIdx]}");
+                    bestProbs = bestProbs.OrderBy(v => -v.Item2).Take(10).ToList();
+                    foreach(var (index, probability) in bestProbs)
+                    {
+                        Console.WriteLine($"{(probability * 100).ToString("F4")}% : {labels[index]}");
+                    }
                 }
             }
 #if DEBUG
