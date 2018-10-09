@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="work\elon_musk.jpg" />
+    <None Remove="work\parrot.jpg" />
+    <None Remove="work\willy_wonka_new.jpg" />
+    <None Remove="work\willy_wonka_old.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="work\elon_musk.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="work\parrot.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="work\willy_wonka_new.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="work\willy_wonka_old.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mono.Options" Version="5.3.0.1" />
+    <PackageReference Include="TensorFlowSharp" Version="1.11.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TFSharpSamples.Common\TFSharpSamples.Common.csproj" />
+  </ItemGroup>
+
+</Project>
