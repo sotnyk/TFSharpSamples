@@ -13,11 +13,17 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using TensorFlow;
+using TFSharpSamples.Common;
 
 namespace ObjectDetectionSample
 {
     public partial class ODMainForm : Form
     {
+        TFGraph _graph;
+        IEnumerable<CatalogItem> _catalog;
+        private TFSession _session;
+
         public ODMainForm()
         {
             InitializeComponent();
@@ -30,7 +36,13 @@ namespace ObjectDetectionSample
                 toolStripStatusLabel.Text = "Start to download model and labels";
                 await DownloadDefaultModelAsync(Program.ModelPath);
                 await DownloadDefaultTexts(Program.LabelsPath);
-                toolStripStatusLabel.Text = "Start to download model and labels";
+                toolStripStatusLabel.Text = "Start to load model.";
+                _catalog = CatalogUtil.ReadCatalogItems(Program.LabelsPath);
+                _graph = new TFGraph();
+                var model = File.ReadAllBytes(Program.ModelPath);
+                _graph.Import(new TFBuffer(model));
+                _session = new TFSession(_graph);
+                toolStripStatusLabel.Text = "Initialization done.";
             }
             catch (Exception ex)
             {
@@ -65,7 +77,11 @@ namespace ObjectDetectionSample
             if (tempModelName == null)
                 throw new IOException($"Cannot find unpacked model file '{modelShortName}'");
             File.Copy(tempModelName, modelPath, true);
-            Directory.Delete(Path.GetDirectoryName(tempModelName));
+
+            var unpackedArchiveDir = Path.GetDirectoryName(tempModelName);
+            foreach (var f in Directory.GetFiles(unpackedArchiveDir))
+                File.Delete(f);
+            Directory.Delete(unpackedArchiveDir);
         }
 
         private static void ExtractToDirectory(string file, string targetDir)
