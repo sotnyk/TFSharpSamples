@@ -2,15 +2,12 @@
 using ICSharpCode.SharpZipLib.Tar;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Configuration;
-using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TensorFlow;
@@ -23,6 +20,8 @@ namespace ObjectDetectionSample
         TFGraph _graph;
         IEnumerable<CatalogItem> _catalog;
         private TFSession _session;
+
+        private static double MIN_SCORE_FOR_OBJECT_HIGHLIGHTING = 0.5;
 
         public ODMainForm()
         {
@@ -43,6 +42,8 @@ namespace ObjectDetectionSample
                 _graph.Import(new TFBuffer(model));
                 _session = new TFSession(_graph);
                 toolStripStatusLabel.Text = "Initialization done.";
+                await DrawBoxesAsync(Program.DemoImagePath);
+                loadPictureToolStripMenuItem.Enabled = true;
             }
             catch (Exception ex)
             {
@@ -104,6 +105,102 @@ namespace ObjectDetectionSample
             var wc = new HttpClient();
             var content = await wc.GetByteArrayAsync(defaultTextsUrl);
             File.WriteAllBytes(labelsPath, content);
+        }
+
+        private async void loadPictureToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            loadPictureToolStripMenuItem.Enabled = false;
+            try
+            {
+                if (openFileDialog.ShowDialog(this) == DialogResult.OK)
+                {
+                    await DrawBoxesAsync(openFileDialog.FileName);
+                }
+            }
+            finally
+            {
+                loadPictureToolStripMenuItem.Enabled = true;
+            }
+        }
+
+        private async Task DrawBoxesAsync(string inputFileName)
+        {
+            toolStripStatusLabel.Text = $"Start processing of '{inputFileName}'";
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var drawBoxesTask = new Task(() => DrawBoxes(inputFileName));
+            drawBoxesTask.Start();
+            await drawBoxesTask;
+            using (var imageStream = File.OpenRead(Program.OutputImagePath))
+                pbOutput.Image = Image.FromStream(imageStream);
+            stopwatch.Stop();
+            toolStripStatusLabel.Text = $"Processing of '{inputFileName}' done in {stopwatch.ElapsedMilliseconds} msec.";
+        }
+
+        private void DrawBoxes(string inputFileName)
+        {
+            var tensor = ImageUtil.CreateTensorFromImageFile(inputFileName, TFDataType.UInt8);
+            var runner = _session.GetRunner();
+
+            runner
+                .AddInput(_graph["image_tensor"][0], tensor)
+                .Fetch(
+                _graph["detection_boxes"][0],
+                _graph["detection_scores"][0],
+                _graph["detection_classes"][0],
+                _graph["num_detections"][0]);
+            var output = runner.Run();
+
+            var boxes = (float[,,])output[0].GetValue(jagged: false);
+            var scores = (float[,])output[1].GetValue(jagged: false);
+            var classes = (float[,])output[2].GetValue(jagged: false);
+            var num = (float[])output[3].GetValue(jagged: false);
+
+            DrawBoxes(boxes, scores, classes, inputFileName, Program.OutputImagePath, MIN_SCORE_FOR_OBJECT_HIGHLIGHTING);
+        }
+
+        private void DrawBoxes(float[,,] boxes, float[,] scores, float[,] classes, string inputFile, string outputFile, double minScore)
+        {
+            var x = boxes.GetLength(0);
+            var y = boxes.GetLength(1);
+            var z = boxes.GetLength(2);
+
+            float ymin = 0, xmin = 0, ymax = 0, xmax = 0;
+
+            using (var editor = new ImageEditor(inputFile, outputFile))
+            {
+                for (int i = 0; i < x; i++)
+                {
+                    for (int j = 0; j < y; j++)
+                    {
+                        if (scores[i, j] < minScore) continue;
+
+                        for (int k = 0; k < z; k++)
+                        {
+                            var box = boxes[i, j, k];
+                            switch (k)
+                            {
+                                case 0:
+                                    ymin = box;
+                                    break;
+                                case 1:
+                                    xmin = box;
+                                    break;
+                                case 2:
+                                    ymax = box;
+                                    break;
+                                case 3:
+                                    xmax = box;
+                                    break;
+                            }
+                        }
+
+                        int value = Convert.ToInt32(classes[i, j]);
+                        CatalogItem catalogItem = _catalog.FirstOrDefault(item => item.Id == value);
+                        editor.AddBox(xmin, xmax, ymin, ymax, $"{catalogItem.DisplayName} : {(scores[i, j] * 100).ToString("0")}%");
+                    }
+                }
+            }
         }
     }
 }

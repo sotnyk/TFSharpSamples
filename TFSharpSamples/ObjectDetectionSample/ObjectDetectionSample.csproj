@@ -58,6 +58,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ImageEditor.cs" />
     <Compile Include="ODMainForm.cs">
       <SubType>Form</SubType>
     </Compile>
