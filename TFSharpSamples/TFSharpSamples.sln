@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TFSharpSamples.Common", "TF
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectDetectionSample", "ObjectDetectionSample\ObjectDetectionSample.csproj", "{41E6B4E4-5141-4D90-B058-809C9E1A5D73}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NerSample", "NerSample\NerSample.csproj", "{6D793E8E-4790-4218-9349-C38EC9919F79}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{41E6B4E4-5141-4D90-B058-809C9E1A5D73}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{41E6B4E4-5141-4D90-B058-809C9E1A5D73}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{41E6B4E4-5141-4D90-B058-809C9E1A5D73}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D793E8E-4790-4218-9349-C38EC9919F79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D793E8E-4790-4218-9349-C38EC9919F79}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D793E8E-4790-4218-9349-C38EC9919F79}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D793E8E-4790-4218-9349-C38EC9919F79}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

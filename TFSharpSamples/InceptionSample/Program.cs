@@ -23,14 +23,14 @@ namespace InceptionSample
             options.WriteOptionDescriptions(Console.Out);
         }
 
-        static bool jagged = true;
+        //static bool jagged;
 
         static OptionSet options = new OptionSet()
         {
             { "m|dir=",  "Specifies the directory where the model and labels are stored", v => dir = v },
             { "h|help", v => Help () },
 
-            { "amulti", "Use multi-dimensional arrays instead of jagged arrays", v => jagged = false }
+          //  { "amulti", "Use multi-dimensional arrays instead of jagged arrays", v => jagged = false }
         };
 
 
