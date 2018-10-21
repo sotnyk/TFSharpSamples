@@ -30,6 +30,7 @@ namespace NerSample
 
         static void Main(string[] args)
         {
+            // https://www.slideshare.net/trivadis/techevent-machine-learning - slide 32
             // Construct an in-memory graph from the serialized form.
             var graph = new TFGraph();
             // Load the serialized GraphDef from a file.
@@ -42,7 +43,9 @@ namespace NerSample
             {
                 foreach(var sample in samples)
                 {
-                    var (tensor, lengths) = CreateTensorFromSentence(sample);
+                    var (tensor, lengths) = 
+                        //CreateTensorFromSentence(sample);
+                        CreateTestTensors();
                     var runner = session.GetRunner();
                     runner.AddInput(graph["input_batch"][0], tensor);
                     runner.AddInput(graph["lengths"][0], tensor);
@@ -55,9 +58,44 @@ namespace NerSample
             }
         }
 
+        private static (TFTensor, TFTensor) CreateTestTensors()
+        {
+            var x = new int[] {
+                1061, 19693,  974,  980,  981,  811, 11474,  589,   39, 1058,   39,   57,
+                1057,  4934,   46,    1,    1,    1,     1,    1,    1,    1,    1};
+            var l = new int[] { 15 };
+            var tensor = TFTensor.FromBuffer(new TFShape(1, x.Length), x, 0, x.Length);
+            var lengths = TFTensor.FromBuffer(new TFShape(1), l, 0, l.Length);
+
+            return (tensor, lengths);
+        }
+
         private static (TFTensor, TFTensor) CreateTensorFromSentence(string sample)
         {
             var tokens = SentenceToTokens(sample);
+
+            var featuresCount = 200;
+
+            var features = new int[featuresCount];
+            //new int[tokens.Count + 1];
+            for (int tIndex = 0; tIndex < featuresCount; ++tIndex)
+            {
+                if (tIndex < tokens.Count())
+                {
+                    if (!Token2Index.TryGetValue(tokens[tIndex], out var oneHotIndex))
+                        oneHotIndex = 0;
+                    features[tIndex] = oneHotIndex;
+                }
+                else
+                {
+                    features[tIndex] = Token2Index["<PAD>"];
+                }
+            }
+            // Add <PAD> token
+            //features[tokens.Count] = Token2Index["<PAD>"];
+
+            var tensor = TFTensor.FromBuffer(new TFShape(features.Length), features, 0, features.Length);
+            var lengths = TFTensor.FromBuffer(new TFShape(1), new[] { tokens.Count }, 0, 1);
 
             /*
             var features = new int[(tokens.Count + 1) * Token2Index.Count];
@@ -76,7 +114,7 @@ namespace NerSample
             var lengths = TFTensor.FromBuffer(new TFShape(1), new[] { tokens.Count }, 0, 1);
             /*/
 
-            const int MaxPlaceholderLength = 200;
+            /*const int MaxPlaceholderLength = 200;
 
             var features = new int[MaxPlaceholderLength * Token2Index.Count];
             var padIndex = Token2Index["<PAD>"];
@@ -95,7 +133,7 @@ namespace NerSample
             //var tensor = TFTensor.FromBuffer(new TFShape(1, 1, Token2Index.Count, MaxPlaceholderLength), features, 0, features.Length);
             var lengths = //TFTensor.FromBuffer(new TFShape(1, 1), new[] { MaxPlaceholderLength }, 0, 1);
                     TFTensor.FromBuffer(new TFShape(1), new[] { MaxPlaceholderLength }, 0, 1);
-            
+            */
 
             return (tensor, lengths);
         }
